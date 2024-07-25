@@ -1,0 +1,34 @@
+import pytest
+from playwright.sync_api import sync_playwright
+
+@pytest.fixture(scope="session")
+def browser():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        yield browser
+        browser.close()
+
+@pytest.fixture(scope="session")
+def context(browser):
+    context = browser.new_context()
+    yield context
+    context.close()
+
+@pytest.fixture(scope="session")
+def page(context):
+    page = context.new_page()
+    yield page
+    page.close()
+
+def test_open_main_page(page):
+    page.goto("https://engeto.cz/")
+    assert page.title() == "Kurzy programování a dalších IT technologií | ENGETO"
+
+def test_check_element_exists(page):
+    page.goto("https://engeto.cz/")
+    assert page.locator("#top-menu span", has_text="O nás").is_visible()
+
+def test_check_link_functionality(page):
+    page.goto("https://engeto.cz/")
+    page.click("text=Kurzy")
+    assert page.url == "https://engeto.cz/prehled-kurzu/"
